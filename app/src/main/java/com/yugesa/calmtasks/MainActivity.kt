@@ -1186,6 +1186,7 @@ private fun DayNavigator(date: LocalDate, onPrevious: () -> Unit, onNext: () -> 
             modifier = Modifier.weight(2.4f),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
