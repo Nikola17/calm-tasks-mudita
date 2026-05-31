@@ -21,6 +21,33 @@ attention-driven mechanics.
 - No gamification, streaks, feeds, cloud sync, or engagement loops.
 - UI uses black, white, and light gray only.
 
+## Why Calm Tasks Is Mindful
+
+Calm Tasks intentionally limits daily focus instead of encouraging users to
+manage everything at once. The Today view starts with 3 priorities so users can
+choose what matters and leave the rest out of sight.
+
+The app avoids gamification, streaks, feeds, accounts, cloud sync, and
+attention-driven metrics. Reminders are local notifications only, and the
+interface is designed to help users complete an action quickly, then leave the
+phone alone.
+
+## Bright Patterns Applied
+
+- User autonomy: tasks stay local, and users choose their own daily limit.
+- Cognitive load reduction: the app separates Today, Unplanned, Folders, and
+  Completed instead of showing one long task feed.
+- Non-intrusive reminders: notifications are local, practical, and limited to
+  the reminder the user explicitly set.
+- No retention mechanics: there are no streaks, rewards, ads, infinite scroll,
+  or nudges designed to increase app usage.
+
+## Screenshots
+
+| Home empty | Add reminder with time | Completed or folders |
+| --- | --- | --- |
+| ![Home empty](docs/screenshots/home-empty.png) | ![Add reminder with time](docs/screenshots/add-reminder-time.png) | ![Completed or folders](docs/screenshots/done-or-folders.png) |
+
 ## Current Features
 
 - Today view with day-by-day navigation for upcoming dates.

@@ -1378,7 +1378,7 @@ private fun TodayEmptyState() {
         Image(
             painter = painterResource(todayEmptyImageRes()),
             contentDescription = null,
-            modifier = Modifier.size(width = 172.dp, height = 172.dp),
+            modifier = Modifier.size(width = 148.dp, height = 148.dp),
         )
         Text(
             text = stringResource(R.string.empty_today_title),
