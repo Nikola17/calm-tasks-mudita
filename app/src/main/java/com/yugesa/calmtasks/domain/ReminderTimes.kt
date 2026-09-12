@@ -11,16 +11,39 @@ object ReminderTimes {
         time: LocalTime,
         now: LocalDateTime = LocalDateTime.now(),
         zoneId: ZoneId = ZoneId.systemDefault(),
-    ): Long {
+    ): Long? {
         val selected = LocalDateTime.of(date, time)
-        val adjusted = if (selected.isAfter(now)) selected else now.plusHours(1)
-        return adjusted
+        if (!selected.isAfter(now)) return null
+        return selected
             .atZone(zoneId)
             .toInstant()
             .toEpochMilli()
     }
 
-    fun reminderMillis(enabled: Boolean, date: LocalDate, time: LocalTime): Long? {
-        return if (enabled) atDateTime(date, time) else null
+    fun reminderMillis(
+        enabled: Boolean,
+        date: LocalDate,
+        time: LocalTime,
+        now: LocalDateTime = LocalDateTime.now(),
+        zoneId: ZoneId = ZoneId.systemDefault(),
+    ): Long? {
+        return if (enabled) atDateTime(date, time, now, zoneId) else null
+    }
+
+    fun reminderMillisForEdit(
+        enabled: Boolean,
+        date: LocalDate,
+        time: LocalTime,
+        originalReminderAt: Long?,
+        originalReminderDate: LocalDate?,
+        originalReminderTime: LocalTime?,
+        now: LocalDateTime = LocalDateTime.now(),
+        zoneId: ZoneId = ZoneId.systemDefault(),
+    ): Long? {
+        if (!enabled) return null
+        if (originalReminderAt != null && date == originalReminderDate && time == originalReminderTime) {
+            return originalReminderAt
+        }
+        return reminderMillis(true, date, time, now, zoneId)
     }
 }

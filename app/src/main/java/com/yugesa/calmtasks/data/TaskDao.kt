@@ -15,6 +15,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
     suspend fun getTask(id: Long): TaskEntity?
 
+    @Query("SELECT * FROM tasks WHERE status = 'active' AND reminderAt IS NOT NULL AND reminderAt > :now")
+    suspend fun getFutureReminders(now: Long): List<TaskEntity>
+
     @Insert
     suspend fun insertTask(task: TaskEntity): Long
 
@@ -36,6 +39,6 @@ interface TaskDao {
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun deleteTask(id: Long)
 
-    @Query("UPDATE tasks SET folderId = NULL, updatedAt = :updatedAt WHERE folderId = :folderId")
+    @Query("UPDATE tasks SET folderId = NULL, plannedDate = NULL, updatedAt = :updatedAt WHERE folderId = :folderId")
     suspend fun moveTasksToUnplanned(folderId: Long, updatedAt: Long)
 }

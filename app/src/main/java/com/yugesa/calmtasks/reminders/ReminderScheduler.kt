@@ -18,7 +18,13 @@ object ReminderScheduler {
 
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = pendingIntent(context, taskId, title, ACTION_SHOW)
-        alarmManager.set(AlarmManager.RTC_WAKEUP, reminderAt, pendingIntent)
+        // Exact alarms are preferred for a user-selected reminder time. Android may
+        // deny exact-alarm access, so keep a reliable inexact fallback.
+        try {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, reminderAt, pendingIntent)
+        } catch (_: SecurityException) {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, reminderAt, pendingIntent)
+        }
     }
 
     fun cancel(context: Context, taskId: Long) {
@@ -47,4 +53,3 @@ object ReminderScheduler {
         }
     }
 }
-

@@ -10,6 +10,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.yugesa.calmtasks.LanguageStore
 import com.yugesa.calmtasks.MainActivity
 import com.yugesa.calmtasks.R
 import com.yugesa.calmtasks.data.CalmTasksDatabase
@@ -58,7 +59,8 @@ class ReminderReceiver : BroadcastReceiver() {
             return
         }
 
-        ReminderNotifications.ensureChannel(context)
+        val localizedContext = LanguageStore.wrap(context)
+        ReminderNotifications.ensureChannel(localizedContext)
 
         val openIntent = Intent(context, MainActivity::class.java)
         val openPendingIntent = PendingIntent.getActivity(
@@ -68,15 +70,15 @@ class ReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val notification = NotificationCompat.Builder(context, ReminderNotifications.CHANNEL_ID)
+        val notification = NotificationCompat.Builder(localizedContext, ReminderNotifications.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.reminder_title))
+            .setContentTitle(localizedContext.getString(R.string.reminder_title))
             .setContentText(title)
             .setContentIntent(openPendingIntent)
             .setAutoCancel(true)
-            .addAction(R.drawable.ic_notification, context.getString(R.string.done), ReminderScheduler.pendingIntent(context, taskId, title, ReminderScheduler.ACTION_DONE))
-            .addAction(R.drawable.ic_notification, context.getString(R.string.later), ReminderScheduler.pendingIntent(context, taskId, title, ReminderScheduler.ACTION_LATER))
-            .addAction(R.drawable.ic_notification, context.getString(R.string.open), openPendingIntent)
+            .addAction(R.drawable.ic_notification, localizedContext.getString(R.string.done), ReminderScheduler.pendingIntent(context, taskId, title, ReminderScheduler.ACTION_DONE))
+            .addAction(R.drawable.ic_notification, localizedContext.getString(R.string.later), ReminderScheduler.pendingIntent(context, taskId, title, ReminderScheduler.ACTION_LATER))
+            .addAction(R.drawable.ic_notification, localizedContext.getString(R.string.open), openPendingIntent)
             .build()
 
         NotificationManagerCompat.from(context).notify(taskId.toInt(), notification)

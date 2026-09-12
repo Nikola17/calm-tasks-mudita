@@ -8,6 +8,7 @@ import com.yugesa.calmtasks.data.CalmTasksRepository
 import com.yugesa.calmtasks.data.FolderEntity
 import com.yugesa.calmtasks.data.SettingsEntity
 import com.yugesa.calmtasks.data.TaskEntity
+import com.yugesa.calmtasks.domain.DateNavigation
 import com.yugesa.calmtasks.reminders.ReminderScheduler
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,9 +63,7 @@ class CalmTasksViewModel(
     }
 
     fun previousDay() {
-        selectedDate.update { current ->
-            if (current.isAfter(LocalDate.now())) current.minusDays(1) else current
-        }
+        selectedDate.update(DateNavigation::previousDay)
     }
 
     fun nextDay() {

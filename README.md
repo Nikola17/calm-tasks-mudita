@@ -50,14 +50,14 @@ phone alone.
 
 ## Current Features
 
-- Today view with day-by-day navigation for upcoming dates.
+- Today view with day-by-day navigation across past and upcoming dates.
 - Unplanned view for tasks that do not have a chosen day yet.
 - Default folders plus custom folders created from Settings.
 - Custom folder rename, delete, and manual ordering from Settings.
 - Duplicate folder names are blocked.
 - Deleting a custom folder moves its tasks back to Unplanned.
 - Add and edit tasks with title, folder, planned day, and optional reminder.
-- Precise reminders by date and time.
+- Local reminders by date and time, with exact alarms when the operating system allows them.
 - Local notification actions: Done, Later, Open.
 - Completed task history with restore and delete actions.
 - Manual task deletion from the task detail screen.
@@ -77,6 +77,21 @@ The app includes resources for:
 - Italian
 - German
 - Russian
+- Ukrainian
+- Romanian
+- Dutch
+- Turkish
+- Hungarian
+- Greek
+- Czech
+- Swedish
+- Catalan
+- Serbian/Croatian (`sr-Latn`)
+- Bulgarian
+- Albanian
+- Danish
+- Finnish
+- Norwegian
 
 The app can follow the system language or use a language chosen in Settings.
 
@@ -108,7 +123,7 @@ Run before sharing a new APK:
   - Completed tasks with restore and delete actions.
 - Confirm the UI remains black, white, and light gray only.
 - Confirm selected buttons render with black fill and white text.
-- Confirm every visible string is translated in the 8 supported locales.
+- Confirm every visible string is translated in the 23 supported locales.
 
 ## MVP Scope
 

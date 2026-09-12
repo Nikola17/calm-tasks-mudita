@@ -23,9 +23,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -55,6 +58,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -72,6 +76,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yugesa.calmtasks.data.FolderEntity
 import com.yugesa.calmtasks.data.TaskEntity
 import com.yugesa.calmtasks.domain.CalmDateTimeLabels
+import com.yugesa.calmtasks.domain.TaskPlanning
 import com.yugesa.calmtasks.domain.ReminderTimes
 import com.yugesa.calmtasks.domain.TodayPlanner
 import com.yugesa.calmtasks.reminders.ReminderNotifications
@@ -316,7 +321,14 @@ private fun FocusReviewScreen(state: CalmTasksUiState, viewModel: CalmTasksViewM
     val tasks = TodayPlanner.activeToday(state.tasks, selectedDay)
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.focus_overflow, state.todayPriorityLimit), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            pluralStringResource(
+                R.plurals.focus_overflow,
+                state.todayPriorityLimit,
+                state.todayPriorityLimit,
+            ),
+            style = MaterialTheme.typography.bodyLarge,
+        )
         OutlinedButton(onClick = { viewModel.goTo(Screen.Settings) }, modifier = Modifier.fillMaxWidth().height(MmdControlHeight), border = blackBorder(), shape = calmButtonShape()) {
             Text(stringResource(R.string.change_limit), color = Color.Black, fontWeight = FontWeight.Bold)
         }
@@ -401,6 +413,7 @@ private fun AddTaskScreen(state: CalmTasksUiState, viewModel: CalmTasksViewModel
     var reminderEnabled by remember { mutableStateOf(false) }
     var reminderDate by remember { mutableStateOf(state.selectedDate) }
     var reminderTime by remember { mutableStateOf(LocalTime.of(9, 0)) }
+    val reminderInvalid = reminderEnabled && ReminderTimes.atDateTime(reminderDate, reminderTime) == null
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -431,12 +444,13 @@ private fun AddTaskScreen(state: CalmTasksUiState, viewModel: CalmTasksViewModel
                 onEnabledChange = { reminderEnabled = it },
                 onDateChange = { reminderDate = it },
                 onTimeChange = { reminderTime = it },
+                invalid = reminderInvalid,
             )
         }
         item {
             Button(
                 onClick = { viewModel.addTask(title, folderId, plannedForSelectedDay, ReminderTimes.reminderMillis(reminderEnabled, reminderDate, reminderTime)) },
-                enabled = title.isNotBlank(),
+                enabled = title.isNotBlank() && !reminderInvalid,
                 modifier = Modifier.fillMaxWidth().height(MmdPrimaryButtonHeight),
                 colors = blackButtonColors(),
                 shape = primaryButtonShape(),
@@ -461,6 +475,13 @@ private fun TaskDetailScreen(taskId: Long, state: CalmTasksUiState, viewModel: C
     var reminderEnabled by remember(task.id) { mutableStateOf(task.reminderAt != null) }
     var reminderDate by remember(task.id) { mutableStateOf(dateFromMillis(task.reminderAt) ?: state.selectedDate) }
     var reminderTime by remember(task.id) { mutableStateOf(timeFromMillis(task.reminderAt) ?: LocalTime.of(9, 0)) }
+    val initiallyPlannedForSelectedDay = task.plannedDate == state.selectedDate.toString()
+    val originalReminderDate = dateFromMillis(task.reminderAt)
+    val originalReminderTime = timeFromMillis(task.reminderAt)
+    val reminderUnchanged = task.reminderAt != null &&
+        reminderDate == originalReminderDate &&
+        reminderTime == originalReminderTime
+    val reminderInvalid = reminderEnabled && !reminderUnchanged && ReminderTimes.atDateTime(reminderDate, reminderTime) == null
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -491,6 +512,7 @@ private fun TaskDetailScreen(taskId: Long, state: CalmTasksUiState, viewModel: C
                 onEnabledChange = { reminderEnabled = it },
                 onDateChange = { reminderDate = it },
                 onTimeChange = { reminderTime = it },
+                invalid = reminderInvalid,
             )
         }
         item {
@@ -500,12 +522,24 @@ private fun TaskDetailScreen(taskId: Long, state: CalmTasksUiState, viewModel: C
                         task.copy(
                             title = title,
                             folderId = folderId,
-                            plannedDate = if (plannedForSelectedDay) state.selectedDate.toString() else null,
-                            reminderAt = ReminderTimes.reminderMillis(reminderEnabled, reminderDate, reminderTime),
+                            plannedDate = TaskPlanning.plannedDateAfterEdit(
+                                originalDate = task.plannedDate,
+                                selectedDate = state.selectedDate.toString(),
+                                initiallyPlannedForSelectedDay = initiallyPlannedForSelectedDay,
+                                plannedForSelectedDay = plannedForSelectedDay,
+                            ),
+                            reminderAt = ReminderTimes.reminderMillisForEdit(
+                                enabled = reminderEnabled,
+                                date = reminderDate,
+                                time = reminderTime,
+                                originalReminderAt = task.reminderAt,
+                                originalReminderDate = originalReminderDate,
+                                originalReminderTime = originalReminderTime,
+                            ),
                         ),
                     )
                 },
-                enabled = title.isNotBlank(),
+                enabled = title.isNotBlank() && !reminderInvalid,
                 modifier = Modifier.fillMaxWidth().height(MmdPrimaryButtonHeight),
                 colors = blackButtonColors(),
                 shape = primaryButtonShape(),
@@ -841,21 +875,10 @@ private fun LanguageSettingsSection(selectedLanguage: String, onSelected: (Strin
     }
 }
 
-private data class LanguageOption(val code: String, val label: String)
-
 @Composable
 private fun languageOptions(): List<LanguageOption> {
-    return listOf(
-        LanguageOption(LanguageStore.SYSTEM, stringResource(R.string.system_language)),
-        LanguageOption("en", "English"),
-        LanguageOption("fr", "Français"),
-        LanguageOption("pl", "Polski"),
-        LanguageOption("es", "Español"),
-        LanguageOption("pt", "Português"),
-        LanguageOption("it", "Italiano"),
-        LanguageOption("de", "Deutsch"),
-        LanguageOption("ru", "Русский"),
-    )
+    return listOf(LanguageOption(LanguageStore.SYSTEM, stringResource(R.string.system_language))) +
+        LanguageCatalog.options
 }
 
 @Composable
@@ -1019,7 +1042,8 @@ private fun ReviewTaskCard(
 @Composable
 private fun FolderChooser(folders: List<FolderEntity>, selectedId: Long?, onSelected: (Long?) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedLabel = folders.firstOrNull { it.id == selectedId }?.let { folderLabel(it) } ?: stringResource(R.string.none)
+    val selectedLabel = folders.firstOrNull { it.id == selectedId }?.let { folderLabel(it) }
+        ?: stringResource(R.string.no_folder)
 
     SectionLabel(stringResource(R.string.folder))
     Box {
@@ -1061,7 +1085,7 @@ private fun FolderMenuPopup(
     onDismiss: () -> Unit,
     onSelected: (Long?) -> Unit,
 ) {
-    val items = listOf<Pair<String, Long?>>(stringResource(R.string.none) to null) +
+    val items = listOf<Pair<String, Long?>>(stringResource(R.string.no_folder) to null) +
         folders.map { folderLabel(it) to it.id }
 
     Popup(
@@ -1070,7 +1094,7 @@ private fun FolderMenuPopup(
         properties = PopupProperties(focusable = true, dismissOnClickOutside = true),
     ) {
         Surface(
-            modifier = Modifier.width(320.dp),
+            modifier = Modifier.width(280.dp),
             color = Color.White,
             contentColor = Color.Black,
             shape = RoundedCornerShape(26.dp),
@@ -1078,7 +1102,7 @@ private fun FolderMenuPopup(
             shadowElevation = 0.dp,
             tonalElevation = 0.dp,
         ) {
-            Column {
+            Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState())) {
                 items.forEachIndexed { index, item ->
                     val selected = selectedId == item.second
                     OutlinedButton(
@@ -1115,14 +1139,22 @@ private fun ReminderChooser(
     onEnabledChange: (Boolean) -> Unit,
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
+    invalid: Boolean,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ToggleRow(
             title = stringResource(R.string.reminder),
             options = listOf(stringResource(R.string.none) to false, stringResource(R.string.reminder_set) to true),
             selected = enabled,
-            onSelected = onEnabledChange,
-        )
+                onSelected = onEnabledChange,
+            )
+        if (invalid) {
+            Text(
+                text = stringResource(R.string.reminder_in_past),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+            )
+        }
         if (enabled) {
             DayNavigator(
                 date = reminderDate,
@@ -1378,7 +1410,7 @@ private fun TodayEmptyState() {
         Image(
             painter = painterResource(todayEmptyImageRes()),
             contentDescription = null,
-            modifier = Modifier.size(width = 148.dp, height = 148.dp),
+            modifier = Modifier.size(width = 128.dp, height = 128.dp),
         )
         Text(
             text = stringResource(R.string.empty_today_title),

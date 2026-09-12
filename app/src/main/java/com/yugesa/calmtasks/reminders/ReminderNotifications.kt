@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
+import com.yugesa.calmtasks.LanguageStore
 import com.yugesa.calmtasks.R
 
 object ReminderNotifications {
@@ -15,11 +16,12 @@ object ReminderNotifications {
 
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < 26) return
+        val localizedContext = LanguageStore.wrap(context)
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ID,
-                context.getString(R.string.reminders),
+                localizedContext.getString(R.string.reminders),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ),
         )
